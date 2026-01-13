@@ -1,5 +1,6 @@
 <script type="module">
 	import init, { decompress } from "./pkg/async_brotli_wasm.js";
+	(async () => {
 	await init(fetch("./pkg/async_brotli_wasm.wasm"));
 
 	let res = await fetch("stardew.tar.br");
@@ -9,12 +10,16 @@
 	console.time("decompress");
 	let count = 0;
 	let stream = await decompress(input, 1024 * 1024 * 1);
-	for await (const chunk of stream) {
+	let reader = stream.getReader();
+	while (true) {
+		let { value: chunk, done } = await reader.read();
+		if (done) break;
 		count += chunk.byteLength;
 	}
 	console.timeEnd("decompress");
 	let after = performance.now();
 
 	document.body.innerText = `${after - before}ms to decompress into ${count / (1024 * 1024)}mb`
+	})()
 </script>
 <body></body>
